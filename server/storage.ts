@@ -1,7 +1,10 @@
 import { 
   users, type User, type InsertUser,
-  watchlist, type Watchlist, type InsertWatchlist
+  watchlist, type Watchlist, type InsertWatchlist,
+  invites, type Invite, type InsertInvite
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -18,99 +21,82 @@ export interface IStorage {
   removeFromWatchlist(userId: number, coinId: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private watchlist: Map<number, Watchlist>;
-  private currentUserId: number;
-  private currentWatchlistId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.watchlist = new Map();
-    this.currentUserId = 1;
-    this.currentWatchlistId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser & { referralCode: string }): Promise<User> {
-    const id = this.currentUserId++;
-    const now = new Date();
-    
-    const user: User = {
-      id,
+    const result = await db.insert(users).values({
       ...insertUser,
       isVip: false,
-      vipExpiresAt: null,
-      createdAt: now,
       darkMode: true,
-      notifications: false,
-    };
+      notifications: false
+    }).returning();
     
-    this.users.set(id, user);
-    return user;
+    return result[0];
   }
   
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
-    const user = await this.getUser(id);
-    if (!user) {
+    const result = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (result.length === 0) {
       throw new Error("User not found");
     }
     
-    const updatedUser = { ...user, ...updates };
-    this.users.set(id, updatedUser);
-    
-    return updatedUser;
+    return result[0];
   }
   
   // Watchlist methods
   async getWatchlistByUserId(userId: number): Promise<Watchlist[]> {
-    return Array.from(this.watchlist.values()).filter(
-      (item) => item.userId === userId,
-    );
+    return db.select().from(watchlist).where(eq(watchlist.userId, userId));
   }
   
   async getWatchlistItemByUserIdAndCoinId(userId: number, coinId: string): Promise<Watchlist | undefined> {
-    return Array.from(this.watchlist.values()).find(
-      (item) => item.userId === userId && item.coinId === coinId,
-    );
+    const result = await db
+      .select()
+      .from(watchlist)
+      .where(and(
+        eq(watchlist.userId, userId),
+        eq(watchlist.coinId, coinId)
+      ));
+    
+    return result[0];
   }
   
   async addToWatchlist(item: InsertWatchlist): Promise<Watchlist> {
-    const id = this.currentWatchlistId++;
-    const now = new Date();
+    const result = await db
+      .insert(watchlist)
+      .values(item)
+      .returning();
     
-    const watchlistItem: Watchlist = {
-      id,
-      ...item,
-      createdAt: now,
-    };
-    
-    this.watchlist.set(id, watchlistItem);
-    return watchlistItem;
+    return result[0];
   }
   
   async removeFromWatchlist(userId: number, coinId: string): Promise<void> {
-    const item = await this.getWatchlistItemByUserIdAndCoinId(userId, coinId);
-    if (item) {
-      this.watchlist.delete(item.id);
-    }
+    await db
+      .delete(watchlist)
+      .where(and(
+        eq(watchlist.userId, userId),
+        eq(watchlist.coinId, coinId)
+      ));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
