@@ -11,26 +11,12 @@ import VipUpgrade from "@/pages/VipUpgrade";
 import InviteFriends from "@/pages/InviteFriends";
 import MoonPhaseHeatmap from "@/pages/MoonPhaseHeatmap";
 import Layout from "@/components/Layout";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useAuth } from "@/lib/auth";
 
 function App() {
   const [location, setLocation] = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  
-  const { data: user } = useQuery({
-    queryKey: ["/api/auth/me"],
-    onSuccess: (data) => {
-      if (data) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    },
-    onError: () => {
-      setIsAuthenticated(false);
-    }
-  });
+  const { isAuthenticated, isLoading } = useAuth();
   
   useEffect(() => {
     if (isAuthenticated === false && !location.startsWith("/login") && !location.startsWith("/register")) {
@@ -38,10 +24,10 @@ function App() {
     }
   }, [isAuthenticated, location, setLocation]);
   
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
-        <div className="animate-pulse w-16 h-16 rounded-full border-2 border-accent" />
+        <div className="animate-pulse w-16 h-16 rounded-full border-2 border-primary" />
       </div>
     );
   }

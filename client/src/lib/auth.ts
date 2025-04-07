@@ -11,6 +11,26 @@ export const useAuth = () => {
   
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ['/api/auth/me'],
+    queryFn: async ({ queryKey }) => {
+      try {
+        const res = await fetch(queryKey[0] as string, {
+          credentials: "include",
+        });
+        
+        if (res.status === 401) {
+          return null;
+        }
+        
+        if (!res.ok) {
+          throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+        }
+        
+        return res.json();
+      } catch (error) {
+        console.error("Auth query error:", error);
+        return null;
+      }
+    },
   });
   
   const login = useMutation({
