@@ -85,9 +85,12 @@ const Login = () => {
                     <FormItem>
                       <FormLabel>Benutzername</FormLabel>
                       <FormControl>
-                        <Input placeholder="Benutzername eingeben" {...field} />
+                        <Input placeholder="Benutzername eingeben (z.B. Eddy)" {...field} />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        Hinweis: Bitte den Benutzernamen eingeben, nicht die E-Mail-Adresse.
+                      </p>
                     </FormItem>
                   )}
                 />

@@ -35,12 +35,19 @@ export const useAuth = () => {
   
   const login = useMutation({
     mutationFn: async ({ username, password }: { username: string; password: string }) => {
-      const res = await apiRequest('POST', '/api/auth/login', { username, password });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Login fehlgeschlagen');
+      console.log('Login-Versuch mit:', { username });
+      try {
+        const res = await apiRequest('POST', '/api/auth/login', { username, password });
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error('Login-Fehler (Response):', errorData);
+          throw new Error(errorData.message || 'Login fehlgeschlagen');
+        }
+        return await res.json();
+      } catch (error) {
+        console.error('Login-Fehler (Exception):', error);
+        throw error;
       }
-      return res.json();
     },
     onSuccess: (data) => {
       // Erst die Daten in den Cache setzen
