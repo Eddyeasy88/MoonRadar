@@ -40,7 +40,7 @@ export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true, vipExpiresAt: true });
 
 export const loginUserSchema = z.object({
-  email: z.string().email(),
+  username: z.string().min(3),
   password: z.string().min(6),
 });
 

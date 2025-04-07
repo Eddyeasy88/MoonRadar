@@ -34,8 +34,8 @@ export const useAuth = () => {
   });
   
   const login = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const res = await apiRequest('POST', '/api/auth/login', { email, password });
+    mutationFn: async ({ username, password }: { username: string; password: string }) => {
+      const res = await apiRequest('POST', '/api/auth/login', { username, password });
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Login fehlgeschlagen');

@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import Logout from "@/pages/Logout";
 import Dashboard from "@/pages/Dashboard";
 import CoinDetail from "@/pages/CoinDetail";
 import ShareCoin from "@/pages/ShareCoin";
@@ -20,10 +21,11 @@ function App() {
   
   // Diese Logik leitet Benutzer um, basierend auf Auth-Status
   useEffect(() => {
-    // 1. Wenn der Benutzer nicht authentifiziert ist und nicht auf Login/Register-Seite
+    // 1. Wenn der Benutzer nicht authentifiziert ist und nicht auf Login/Register/Logout-Seite
     if (!isLoading && !isAuthenticated && 
         !location.startsWith("/login") && 
-        !location.startsWith("/register")) {
+        !location.startsWith("/register") &&
+        !location.startsWith("/logout")) {
       console.log("Nicht authentifiziert, Weiterleitung zu /login");
       setLocation("/login");
     }
@@ -52,6 +54,7 @@ function App() {
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/logout" component={Logout} />
         
         <Route path="/">
           {isAuthenticated ? (

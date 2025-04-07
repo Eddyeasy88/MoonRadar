@@ -66,32 +66,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log("Login-Daten erhalten:", req.body);
+      
       const parsed = loginUserSchema.parse(req.body);
       
-      const user = await storage.getUserByEmail(parsed.email);
+      // Versuchen, den Benutzer anhand des Benutzernamens zu finden
+      const user = await storage.getUserByUsername(parsed.username);
       if (!user) {
-        return res.status(400).json({ message: "Invalid email or password" });
+        return res.status(400).json({ message: "Ungültiger Benutzername oder Passwort" });
       }
       
       const isPasswordValid = await compare(parsed.password, user.password);
       if (!isPasswordValid) {
-        return res.status(400).json({ message: "Invalid email or password" });
+        return res.status(400).json({ message: "Ungültiger Benutzername oder Passwort" });
       }
       
-      // Set the user ID in the session
+      // Benutzer-ID in der Session speichern
       if (req.session) {
         req.session.userId = user.id;
       }
       
-      // Remove password from response
+      // Passwort aus der Antwort entfernen
       const { password, ...userWithoutPassword } = user;
       
+      console.log("Login erfolgreich für: ", user.username);
       return res.status(200).json(userWithoutPassword);
     } catch (error) {
+      console.error("Login-Fehler:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors[0].message });
       }
-      return res.status(500).json({ message: "Failed to login" });
+      return res.status(500).json({ message: "Anmeldung fehlgeschlagen" });
     }
   });
   
