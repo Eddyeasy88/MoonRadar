@@ -57,7 +57,13 @@ export const useAuth = () => {
   
   const register = useMutation({
     mutationFn: async ({ username, email, password }: { username: string; email: string; password: string }) => {
-      const res = await apiRequest('POST', '/api/auth/register', { username, email, password });
+      const res = await apiRequest('POST', '/api/auth/register', { 
+        username, 
+        email, 
+        password,
+        referralCode: '', // Wir senden einen leeren String mit, wird vom Server überschrieben
+        referredBy: null // Optional, wird null sein
+      });
       return res.json();
     },
     onSuccess: () => {

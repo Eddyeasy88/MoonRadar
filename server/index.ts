@@ -2,23 +2,30 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// PostgreSQL Session Store
+const PgStore = connectPgSimple(session);
+
 // Session setup
-const MemoryStoreSession = MemoryStore(session);
 app.use(
   session({
-    cookie: { maxAge: 86400000 }, // 24 hours
-    store: new MemoryStoreSession({
-      checkPeriod: 86400000, // prune expired entries every 24h
+    store: new PgStore({
+      pool: pool,
+      createTableIfMissing: true, // Erstellt die Session-Tabelle, falls sie nicht existiert
     }),
+    secret: process.env.SESSION_SECRET || "moonradar-secret",
     resave: false,
     saveUninitialized: false,
-    secret: process.env.SESSION_SECRET || "moonradar-secret",
+    cookie: { 
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Tage
+      secure: process.env.NODE_ENV === 'production', 
+    }
   })
 );
 

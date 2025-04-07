@@ -6,11 +6,29 @@ import { z } from "zod";
 import { compare, hash } from "bcryptjs";
 import { randomUUID } from "crypto";
 
+// Erweitern des Session-Typs, um userId zu erlauben
+declare module 'express-session' {
+  interface SessionData {
+    userId?: number;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const parsed = insertUserSchema.parse(req.body);
+      console.log("Received registration data:", req.body);
+      
+      // Passen Sie die Validierung an, damit sie weniger streng ist
+      const schemaWithDefaults = z.object({
+        username: z.string().min(3),
+        email: z.string().email(),
+        password: z.string().min(6),
+        referralCode: z.string().optional(),
+        referredBy: z.string().nullable().optional(),
+      });
+      
+      const parsed = schemaWithDefaults.parse(req.body);
       
       const existingUserByEmail = await storage.getUserByEmail(parsed.email);
       if (existingUserByEmail) {
@@ -26,9 +44,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const referralCode = randomUUID().split("-")[0];
       
       const user = await storage.createUser({
-        ...parsed,
+        username: parsed.username,
+        email: parsed.email,
         password: hashedPassword,
         referralCode,
+        referredBy: parsed.referredBy || null,
       });
       
       // Remove password from response
@@ -36,6 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(201).json(userWithoutPassword);
     } catch (error) {
+      console.error("Registration error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors[0].message });
       }
@@ -274,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { symbol } = req.params;
     
     // This would normally fetch from a crypto API
-    const mockCoins = {
+    const mockCoins: Record<string, any> = {
       "WAGMI": {
         id: "wagmi",
         symbol: "WAGMI",
