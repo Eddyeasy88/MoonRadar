@@ -96,12 +96,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.post("/api/auth/logout", (req, res) => {
-    req.session?.destroy((err) => {
+    console.log("Logout-Anfrage erhalten, Session:", req.session?.userId);
+    
+    if (!req.session) {
+      // Wenn keine Session existiert, geben wir trotzdem eine Erfolg-Antwort
+      console.log("Keine Session für Logout vorhanden");
+      res.clearCookie("connect.sid");
+      return res.status(200).json({ message: "Logged out successfully" });
+    }
+    
+    req.session.destroy((err) => {
       if (err) {
+        console.error("Fehler beim Session Destroy:", err);
         return res.status(500).json({ message: "Failed to logout" });
       }
       
-      res.clearCookie("connect.sid");
+      console.log("Session erfolgreich zerstört");
+      // Cookie explizit löschen
+      res.clearCookie("connect.sid", { 
+        path: '/',
+        httpOnly: true,
+        maxAge: 0 
+      });
+      
       return res.status(200).json({ message: "Logged out successfully" });
     });
   });

@@ -103,13 +103,35 @@ export const useAuth = () => {
   
   const logout = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/auth/logout', {});
-      return res.json();
+      try {
+        const res = await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Logout fehlgeschlagen: ${res.status}`);
+        }
+        
+        // Zusätzlich: Clientseitige Session-Cookies löschen
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        return await res.json();
+      } catch (error) {
+        console.error("Logout error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
+      console.log("Logout erfolgreich");
       // Den Cache zurücksetzen
+      queryClient.resetQueries();
       queryClient.setQueryData(['/api/auth/me'], null);
-      setLocation('/login');
+      
+      // Umleitung erzwingen
+      window.location.href = '/login';
+      
       toast({
         title: 'Ausgeloggt',
         description: 'Du wurdest erfolgreich ausgeloggt',
@@ -119,7 +141,7 @@ export const useAuth = () => {
       console.error('Logout error:', error);
       toast({
         title: 'Fehler beim Ausloggen',
-        description: error.message,
+        description: error.message || 'Abmeldung fehlgeschlagen',
         variant: 'destructive',
       });
     }
