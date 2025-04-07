@@ -7,7 +7,7 @@ import { useLocation } from 'wouter';
 export const useAuth = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [_, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ['/api/auth/me'],
@@ -36,17 +36,29 @@ export const useAuth = () => {
   const login = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const res = await apiRequest('POST', '/api/auth/login', { email, password });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Login fehlgeschlagen');
+      }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      setLocation('/');
+    onSuccess: (data) => {
+      // Erst die Daten in den Cache setzen
+      queryClient.setQueryData(['/api/auth/me'], data);
+      
+      // Dann zur Dashboard-Seite weiterleiten
+      setTimeout(() => {
+        console.log('Weiterleitung nach erfolgreicher Anmeldung');
+        setLocation('/');
+      }, 100);
+      
       toast({
         title: 'Erfolgreich eingeloggt',
         description: 'Willkommen zurück bei MoonRadar',
       });
     },
     onError: (error: any) => {
+      console.error('Login error:', error);
       toast({
         title: 'Login fehlgeschlagen',
         description: error.message || 'Bitte überprüfe deine Eingaben',
@@ -64,6 +76,12 @@ export const useAuth = () => {
         referralCode: '', // Wir senden einen leeren String mit, wird vom Server überschrieben
         referredBy: null // Optional, wird null sein
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Registrierung fehlgeschlagen');
+      }
+      
       return res.json();
     },
     onSuccess: () => {
@@ -74,6 +92,7 @@ export const useAuth = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Registration error:', error);
       toast({
         title: 'Registration fehlgeschlagen',
         description: error.message || 'Bitte überprüfe deine Eingaben',
@@ -88,7 +107,8 @@ export const useAuth = () => {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.resetQueries();
+      // Den Cache zurücksetzen
+      queryClient.setQueryData(['/api/auth/me'], null);
       setLocation('/login');
       toast({
         title: 'Ausgeloggt',
@@ -96,6 +116,7 @@ export const useAuth = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Logout error:', error);
       toast({
         title: 'Fehler beim Ausloggen',
         description: error.message,

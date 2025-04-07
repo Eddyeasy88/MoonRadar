@@ -16,13 +16,25 @@ import { useAuth } from "@/lib/auth";
 
 function App() {
   const [location, setLocation] = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   
+  // Diese Logik leitet Benutzer um, basierend auf Auth-Status
   useEffect(() => {
-    if (isAuthenticated === false && !location.startsWith("/login") && !location.startsWith("/register")) {
+    // 1. Wenn der Benutzer nicht authentifiziert ist und nicht auf Login/Register-Seite
+    if (!isLoading && !isAuthenticated && 
+        !location.startsWith("/login") && 
+        !location.startsWith("/register")) {
+      console.log("Nicht authentifiziert, Weiterleitung zu /login");
       setLocation("/login");
     }
-  }, [isAuthenticated, location, setLocation]);
+    
+    // 2. Wenn der Benutzer bereits authentifiziert ist und auf Login/Register-Seite
+    if (!isLoading && isAuthenticated && 
+        (location.startsWith("/login") || location.startsWith("/register"))) {
+      console.log("Bereits authentifiziert, Weiterleitung zu /");
+      setLocation("/");
+    }
+  }, [isAuthenticated, isLoading, location, setLocation]);
   
   if (isLoading) {
     return (
@@ -31,6 +43,9 @@ function App() {
       </div>
     );
   }
+  
+  // Logging für Debugging
+  console.log("Auth Status:", { isAuthenticated, user, currentLocation: location });
   
   return (
     <>
@@ -41,13 +56,16 @@ function App() {
         <Route path="/">
           {isAuthenticated ? (
             <Layout>
-              <Route path="/" component={Dashboard} />
-              <Route path="/coin/:symbol" component={CoinDetail} />
-              <Route path="/share/:symbol" component={ShareCoin} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/vip" component={VipUpgrade} />
-              <Route path="/invite" component={InviteFriends} />
-              <Route path="/heatmap" component={MoonPhaseHeatmap} />
+              <Switch>
+                <Route path="/" component={Dashboard} />
+                <Route path="/coin/:symbol" component={CoinDetail} />
+                <Route path="/share/:symbol" component={ShareCoin} />
+                <Route path="/profile" component={Profile} />
+                <Route path="/vip" component={VipUpgrade} />
+                <Route path="/invite" component={InviteFriends} />
+                <Route path="/heatmap" component={MoonPhaseHeatmap} />
+                <Route component={NotFound} />
+              </Switch>
             </Layout>
           ) : (
             <Route component={Login} />

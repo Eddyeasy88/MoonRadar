@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'wouter';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Link, useLocation } from 'wouter';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import RadarLogo from '@/components/RadarLogo';
@@ -15,7 +15,16 @@ const loginSchema = z.object({
 });
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+  const [_, setLocation] = useLocation();
+  
+  // Wenn bereits eingeloggt, zum Dashboard weiterleiten
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('Login-Seite: Benutzer ist bereits eingeloggt, Weiterleitung zum Dashboard');
+      setLocation('/');
+    }
+  }, [isAuthenticated, setLocation]);
   
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -26,6 +35,7 @@ const Login: React.FC = () => {
   });
   
   const onSubmit = (values: z.infer<typeof loginSchema>) => {
+    console.log('Login-Formular abgeschickt:', values.email);
     login.mutate(values);
   };
   
