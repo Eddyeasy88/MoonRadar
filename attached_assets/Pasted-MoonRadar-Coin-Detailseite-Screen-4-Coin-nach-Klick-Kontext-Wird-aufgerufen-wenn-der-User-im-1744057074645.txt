@@ -1,0 +1,73 @@
+MoonRadar – Coin-Detailseite (Screen 4: Coin nach Klick)
+
+Kontext: Wird aufgerufen, wenn der User im Dashboard auf den „Vollmond des Monats“ oder auf einen Coin in der Watchlist klickt.
+
+⸻
+
+Design kommt gleich als Bild – zuerst definieren wir alles inhaltlich für den Assistenten:
+
+⸻
+
+Technische UI-Definition – Coin-Detailansicht
+
+Zweck:
+
+Einzelansicht eines Coins mit allen relevanten Infos für Bewertung, Analyse und Entscheidungsfindung.
+
+⸻
+
+1. Kopfzeile
+	•	Zurück-Button („←“)
+	•	Titel: Name des Coins (z. B. WAGMI)
+	•	Untertitel: Ticker (z. B. $WAGMI)
+
+⸻
+
+2. Live-Daten (aus API)
+
+Alle Daten werden in Echtzeit über die jeweils aktuellste, öffentlich verfügbare Krypto-API geladen (z. B. DexScreener, CoinGecko, Birdeye oder ähnliche). Die Daten müssen regelmäßig aktualisiert werden und dürfen nicht lokal gecached sein.
+
+Datenpunkte:
+	•	Aktueller Preis (in $ oder SOL/ETH etc.)
+	•	24h Performance (%)
+	•	7d Performance (%)
+	•	Whale-Quote (%)
+	•	24h Handelsvolumen
+	•	Anzahl der Holder
+	•	Token-Verteilung (Pie-Chart optional)
+	•	LP-Info (wenn auf DEX)
+	•	Smart Contract Adresse (klickbar, kopierbar)
+	•	Link zu DexScreener, Birdeye oder Chart-Anbieter
+
+⸻
+
+3. Visuals
+	•	Moonphase-Symbol je nach Bewertung
+	•	Whale-Icon (🚀 / 🧨 / 💣) nach Quote
+	•	Radar-Overlay oder glowing Stats (optional animiert)
+
+⸻
+
+4. Aktionen
+	•	Button „Zur Watchlist hinzufügen/entfernen“ (je nach Zustand)
+	•	Button „Teilen“ → öffnet nativen Share-Dialog mit Link
+	•	Button „Zum Chart“ → öffnet externen Link (z. B. DexScreener)
+
+⸻
+
+Design-Vorgaben
+	•	Cleanes Darkmode-Design (#0D0D0D)
+	•	Akzente in #00FF88 (Neon-Grün)
+	•	Hohe Kontraste bei Text & Icons
+	•	Mobile-first, responsiv
+
+⸻
+
+Zusätzlicher Hinweis an Devs:
+	•	Alle Daten über offizielle API-Anbindung ziehen
+	•	API muss regelmäßig auf neue Coins zugreifen können (kein statischer Pool)
+	•	Ideal wäre Kombination aus:
+	•	DexScreener (Charts, DEX-Daten)
+	•	Birdeye (Solana-Stats)
+	•	CoinGecko (Preise, Volumen)
+	•	Moonshot oder Trending-API für Hype-Indikatoren
