@@ -23,8 +23,8 @@ export default function Splash() {
     >
       <img
         src="/splash.png"
-        alt="MoonRadar"
-        style={{ maxWidth: "80%", maxHeight: "80%" }}
+        alt="MoonRadar Logo"
+        style={{ maxWidth: "80%", height: "auto" }}
       />
     </div>
   );
